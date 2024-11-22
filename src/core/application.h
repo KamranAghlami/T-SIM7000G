@@ -13,6 +13,7 @@ public:
 
     static application &get() { return *s_instance; }
 
+    virtual void on_create() = 0;
     virtual void on_update(float timestep) = 0;
 
 private:

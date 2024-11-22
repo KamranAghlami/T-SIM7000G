@@ -17,3 +17,14 @@ The 4MB flash is partitioned as follows, there are 20KBs of space allocated as `
 | app1     | app  | ota_1    | 0x110000 | 0x100000 |
 | storage  | data | spiffs   | 0x210000 | 0x1e0000 |
 | coredump | data | coredump | 0x3f0000 | 0x10000  |
+
+## Getting Started
+It is as easy as inheriting from the `application` class and overriding `on_create` and `on_update` methods. 
+
+Check out the [example.cpp](src/example/example.cpp) file, It's provided to help as a starting point.
+
+**Note:** As mentioned, this example utilizes Espressif's [Storage API](https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/storage/index.html), so if you're building from source don't forget to build and upload the filesystem image as well before the first use.
+
+## Try it out
+
+Got your board at hand? Download the latest [release](https://github.com/KamranAghlami/T-SIM7000G/releases/latest) and flash online via [ESP Tool](https://espressif.github.io/esptool-js). Use the provided `offsets.json` file to specify which address to flash each bin file to.

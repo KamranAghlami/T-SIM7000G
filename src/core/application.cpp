@@ -28,6 +28,8 @@ application *create_application();
 void setup()
 {
     create_application();
+
+    application::get().on_create();
 }
 
 void loop()
