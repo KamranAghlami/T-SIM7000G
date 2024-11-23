@@ -1,39 +1,60 @@
-#include "storage.h"
+#include "hardware/storage.h"
 
-#include <esp_log.h>
-#include <esp_spiffs.h>
+#include <esp_littlefs.h>
+#include <nvs_flash.h>
 
 namespace hardware
 {
     namespace storage
     {
-        void mount(type storage_type, const char *mount_point)
+        constexpr const char *PARTITION_LABEL = "storage";
+
+        void mount(const type storage_type)
         {
-            if (storage_type != type::internal)
+            if (storage_type != type::nvs)
                 return;
 
-            if (esp_spiffs_mounted("storage"))
-                return;
+            esp_err_t err = nvs_flash_init();
 
-            const esp_vfs_spiffs_conf_t mount_config = {
-                .base_path = mount_point,
-                .partition_label = "storage",
-                .max_files = 4,
-                .format_if_mount_failed = true,
-            };
+            if (err == ESP_ERR_NVS_NO_FREE_PAGES || err == ESP_ERR_NVS_NEW_VERSION_FOUND)
+            {
+                ESP_ERROR_CHECK(nvs_flash_erase());
 
-            ESP_ERROR_CHECK(esp_vfs_spiffs_register(&mount_config));
+                err = nvs_flash_init();
+            }
+
+            ESP_ERROR_CHECK(err);
         }
 
-        void unmount(type storage_type)
+        void mount(const type storage_type, const char *mount_point)
         {
-            if (storage_type != type::internal)
+            if (storage_type != type::internal || esp_littlefs_mounted(PARTITION_LABEL))
                 return;
 
-            if (!esp_spiffs_mounted("storage"))
-                return;
+            const esp_vfs_littlefs_conf_t littlefs_config = {
+                .base_path = mount_point,
+                .partition_label = PARTITION_LABEL,
+                // .partition = nullptr,
+                .format_if_mount_failed = true,
+                // .read_only = false,
+                .dont_mount = false,
+                // .grow_on_mount = true,
+            };
 
-            ESP_ERROR_CHECK(esp_vfs_spiffs_unregister("storage"));
+            ESP_ERROR_CHECK(esp_vfs_littlefs_register(&littlefs_config));
+        }
+
+        void unmount(const type storage_type)
+        {
+            if (storage_type == type::nvs)
+                ESP_ERROR_CHECK(nvs_flash_deinit());
+            else if (storage_type == type::internal)
+            {
+                if (!esp_littlefs_mounted(PARTITION_LABEL))
+                    return;
+
+                ESP_ERROR_CHECK(esp_vfs_littlefs_unregister(PARTITION_LABEL));
+            }
         }
     }
 }

@@ -15,12 +15,14 @@ application::application()
 
     s_instance = this;
 
+    hardware::storage::mount(hardware::storage::type::nvs);
     hardware::storage::mount(hardware::storage::type::internal, "");
 }
 
 application::~application()
 {
     hardware::storage::unmount(hardware::storage::type::internal);
+    hardware::storage::unmount(hardware::storage::type::nvs);
 }
 
 application *create_application();
